@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lista de Tarefas',
+      title: 'Tarefas com LocalStack',
       theme: ThemeData(
         // This is the theme of your application.
         //

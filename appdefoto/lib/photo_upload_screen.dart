@@ -26,6 +26,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
+  final Color navyBlue = const Color(0xFF0A2342);
+  final Color navyBlueLight = const Color(0xFF185ADB);
+
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -42,6 +45,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
       initialDate: now,
       firstDate: now.subtract(const Duration(days: 365)),
       lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light(), // Calendário com fundo branco
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -84,56 +93,209 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    final d = date;
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lista de Tarefas')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nome da tarefa'),
-                ),
-                Row(
-                  children: [
-                    Text(_selectedDate == null ? 'Selecione a data' : _selectedDate!.toLocal().toString().split(' ')[0]),
-                    TextButton(onPressed: _pickDate, child: const Text('Escolher Data')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Tarefas com LocalStack'),
+        foregroundColor: Colors.white,
+        backgroundColor: navyBlue,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: navyBlueLight.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navyBlueLight.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
-                DropdownButton<String>(
-                  value: _priority,
-                  items: ['Baixa', 'Normal', 'Alta'].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-                  onChanged: (v) => setState(() => _priority = v!),
-                ),
-                Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _imageFile != null ? Image.file(_imageFile!, height: 50) : const Text('Nenhuma imagem'),
-                    TextButton(onPressed: _pickImage, child: const Text('Escolher Imagem')),
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nome da tarefa',
+                        labelStyle: TextStyle(color: navyBlue),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: navyBlueLight, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _pickDate,
+                            child: AbsorbPointer(
+                              child: TextField(
+                                readOnly: true,
+                                decoration: InputDecoration(
+                                  labelText: 'Data',
+                                  labelStyle: TextStyle(color: navyBlue),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: navyBlueLight, width: 2),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(Icons.calendar_today, color: navyBlueLight),
+                                    onPressed: _pickDate,
+                                  ),
+                                ),
+                                controller: TextEditingController(
+                                  text: _formatDate(_selectedDate),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _priority,
+                      decoration: InputDecoration(
+                        labelText: 'Prioridade',
+                        labelStyle: TextStyle(color: navyBlue),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      items: ['Baixa', 'Normal', 'Alta']
+                          .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _priority = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _imageFile != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(_imageFile!, height: 60, width: 60, fit: BoxFit.cover),
+                              )
+                            : Container(
+                                height: 60,
+                                width: 60,
+                                decoration: BoxDecoration(
+                                  color: navyBlueLight.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.image, color: Colors.grey, size: 32),
+                              ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextButton.icon(
+                            onPressed: _pickImage,
+                            icon: Icon(Icons.add_a_photo, color: navyBlueLight),
+                            label: Text('Escolher Imagem', style: TextStyle(color: navyBlueLight)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _addTask,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: navyBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Adicionar Tarefa', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
                   ],
                 ),
-                ElevatedButton(onPressed: _addTask, child: const Text('Adicionar Tarefa')),
-              ],
-            ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'Tarefas',
+                style: TextStyle(
+                  color: navyBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _tasks.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 32),
+                      child: Text(
+                        'Nenhuma tarefa adicionada ainda.',
+                        style: TextStyle(color: navyBlueLight, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _tasks.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) {
+                        final t = _tasks[i];
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: navyBlueLight.withOpacity(0.07),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            leading: t.image != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(t.image!, height: 40, width: 40, fit: BoxFit.cover),
+                                  )
+                                : Icon(Icons.task_alt, color: navyBlueLight, size: 32),
+                            title: Text(
+                              t.name,
+                              style: TextStyle(
+                                color: navyBlue,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${_formatDate(t.date)}  |  ${t.priority}',
+                              style: TextStyle(color: navyBlueLight, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ],
           ),
-          const Divider(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _tasks.length,
-              itemBuilder: (context, i) {
-                final t = _tasks[i];
-                return ListTile(
-                  leading: t.image != null ? Image.file(t.image!, height: 40) : null,
-                  title: Text(t.name),
-                  subtitle: Text('${t.date.toLocal().toString().split(' ')[0]} - ${t.priority}'),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
