@@ -193,6 +193,19 @@ app.post('/task', upload.single('file'), async (req, res) => {
   res.json({ message: 'Tarefa criada com sucesso', item });
 });
 
+app.get('/tasks', async (req, res) => {
+  if (!awsReady) {
+    return res.status(503).json({ error: 'Serviços AWS ainda inicializando, tente novamente em instantes.' });
+  }
+  try {
+    const data = await docClient.scan({ TableName: TASKS_TABLE }).promise();
+    res.json({ items: data.Items || [] });
+  } catch (err) {
+    console.error('Erro ao buscar tarefas no DynamoDB:', err);
+    res.status(500).json({ error: 'Erro ao buscar tarefas', details: err });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend Node.js rodando em http://localhost:${port}`);
 });
